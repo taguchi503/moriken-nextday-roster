@@ -1,0 +1,14 @@
+{
+  "name": "翌日配置表",
+  "short_name": "翌日配置表",
+  "description": "森建設工業 翌日人員・車両配置表",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#fff200",
+  "icons": [
+    {"src":"icons/icon-192.png","sizes":"192x192","type":"image/png"},
+    {"src":"icons/icon-512.png","sizes":"512x512","type":"image/png"}
+  ]
+}
