@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#fff200">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
-<title>翌日配置表 v0.1.0</title>
+<title>翌日配置表 v0.1.1</title>
 <style>
   :root{
     --ink:#222;--muted:#6b7280;--line:#9ca3af;--soft:#f5f6f8;--yellow:#fff200;--red:#d90000;
@@ -79,6 +79,17 @@
   .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#111827;color:#fff;padding:9px 14px;border-radius:9px;box-shadow:var(--shadow);z-index:50;opacity:0;pointer-events:none;transition:opacity .18s;max-width:90%;text-align:center}
   .toast.show{opacity:1}
   .print-only{display:none}
+  .btn.line-share{background:#078b3d;color:#fff;border-color:#078b3d}
+  .zoom-bar{display:flex;align-items:center;justify-content:flex-end;gap:5px;flex-wrap:wrap;background:#fff;border:1px solid #d1d5db;border-radius:8px;padding:5px 7px;margin-bottom:5px}
+  .zoom-title{font-size:12px;color:#4b5563;margin-right:auto;font-weight:700}
+  .zoom-bar .btn{min-height:36px;padding:4px 10px;font-size:14px;min-width:38px;white-space:nowrap}
+  #zoomLevel{font-size:13px;font-weight:800;min-width:43px;text-align:center;font-variant-numeric:tabular-nums}
+  #gridWrap{touch-action:pan-x pan-y pinch-zoom}
+  #jpegDlg{max-width:740px;max-height:92vh;overflow:auto}
+  #jpegDlg .dlg-actions{justify-content:stretch}
+  #jpegDlg .dlg-actions .btn{flex:1 1 auto}
+  @media(max-width:400px){.zoom-title{flex-basis:100%}.zoom-bar{justify-content:center}.zoom-bar .btn{flex:1}.zoom-bar #zoomLevel{min-width:42px}}
+
   @media(max-width:700px){
     .app{padding:6px}.toolbar{padding:7px;gap:5px}.btn{padding:7px 9px}.grid td.cell{min-width:106px;width:106px}.hint{font-size:13px}.memo-row textarea{font-size:16px}
   }
@@ -86,10 +97,10 @@
   @media print{
     *,*::before,*::after{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}
 
-    html,body{background:#fff}.app{max-width:none;padding:0}.toolbar,.hint,.selection,.memo-area .mic,.mini-status,.toast{display:none!important}
+    html,body{background:#fff}.app{max-width:none;padding:0}.toolbar,.hint,.selection,.zoom-bar,.memo-area .mic,.mini-status,.toast{display:none!important}
     .grid-wrap{border:0;border-radius:0;overflow:visible}.print-only{display:block}
     .print-title{font-weight:800;font-size:14pt;margin-bottom:4mm}.print-date{font-weight:700;margin-right:10px}
-    table.grid{min-width:0;width:100%;font-size:8.5pt}.grid th.rowno{position:static;width:26px;min-width:26px}.grid th.rowno,.grid td{height:27px;border:1px solid #555}
+    table.grid{min-width:0!important;width:100%!important;zoom:1!important;font-size:8.5pt}.grid th.rowno{position:static;width:26px;min-width:26px}.grid th.rowno,.grid td{height:27px;border:1px solid #555}
     .grid td.cell{min-width:0;width:auto}.site-head{min-height:26px;font-size:8.5pt;padding:1px 2px;background:#fff200!important;color:#d90000!important;box-shadow:inset 0 0 0 1000px #fff200!important}.site-head.has-memo::before,.done-toggle{display:none!important}
     .entry,.standalone{min-height:26px;font-size:8.3pt;padding:1px 2px}.entry.text{font-size:7.7pt}
     .holiday-row{margin-top:2mm;border-radius:0;grid-template-columns:55px 1fr}.holiday-label,.holiday-box{min-height:28px}.holiday-label{background:#fff200!important;color:#d90000!important;box-shadow:inset 0 0 0 1000px #fff200!important}.holiday-chip{min-height:24px;padding:2px 5px;font-size:8pt}
@@ -103,9 +114,10 @@
     <label class="datebox">日付 <input id="dateInput" type="date"></label>
     <button class="btn" id="copyPrevBtn">前日のコピー</button>
     <button class="btn" id="undoBtn" disabled>↶ 元に戻す</button>
-    <button class="btn primary" id="printBtn">PDF・印刷</button>
+    <button class="btn" id="jpegBtn">JPEG保存</button>
+    <button class="btn line-share" id="lineShareBtn">LINE共有</button>
     <button class="btn" id="settingsBtn" aria-label="設定">⚙ 設定</button>
-    <span style="margin-left:auto;font-size:12px;color:#6b7280;font-weight:700">v0.1.0</span>
+    <span style="margin-left:auto;font-size:12px;color:#6b7280;font-weight:700">v0.1.1</span>
   </div>
 
   <div class="hint"><strong>基本操作：</strong> 人を押す → 行き先の現場を押す ／ 空白を押す → 「文字」か「現場」 ／ 現場名を押す → 編集</div>
@@ -118,7 +130,15 @@
   </div>
 
   <div class="print-only print-title"><span class="print-date" id="printDate"></span>翌日配置表</div>
-  <div class="grid-wrap">
+  <div class="zoom-bar" aria-label="配置表の拡大縮小">
+    <span class="zoom-title">配置表の表示</span>
+    <button class="btn zoom-btn" id="zoomOutBtn" type="button" aria-label="縮小">−</button>
+    <button class="btn zoom-btn" id="zoomFitBtn" type="button">全体</button>
+    <span id="zoomLevel" aria-live="polite">100%</span>
+    <button class="btn zoom-btn" id="zoomInBtn" type="button" aria-label="拡大">＋</button>
+    <button class="btn zoom-btn" id="zoomResetBtn" type="button">等倍</button>
+  </div>
+  <div class="grid-wrap" id="gridWrap">
     <table class="grid" id="grid"><tbody id="gridBody"></tbody></table>
   </div>
 
@@ -228,6 +248,19 @@
   </div>
 </dialog>
 
+<dialog id="jpegDlg">
+  <div class="dlg">
+    <h2>配置表JPEG</h2>
+    <p id="jpegInfo"></p>
+    <img id="jpegPreview" alt="翌日配置表のJPEGプレビュー" style="display:block;width:100%;height:auto;border:1px solid #d1d5db;background:#fff">
+    <p id="jpegShareHelp">共有画面でLINEを選び、送信先のトークルームを選択してください。</p>
+    <div class="dlg-actions">
+      <button class="btn" data-close="jpegDlg">閉じる</button>
+      <button class="btn primary" id="savePreviewBtn" type="button">JPEGを保存</button>
+      <button class="btn line-share" id="sharePreviewBtn" type="button">LINE共有</button>
+    </div>
+  </div>
+</dialog>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -356,7 +389,7 @@ function render(){
    }
    els.body.appendChild(tr);
  }
- renderHoliday();renderSelection();renderSettings();
+ renderHoliday();renderSelection();renderSettings();applyRosterZoom();
 }
 function renderSiteCell(td,s){
  const b=document.createElement('button');b.type='button';b.className='site-head'+(s.memo?' has-memo':'')+(movingSiteId===s.id?' selected-site':'');b.textContent=s.name;b.draggable=true;
@@ -484,9 +517,143 @@ async function importBackup(file){
  try{const txt=await file.text();const p=JSON.parse(txt);if(p.app!=='moriken_nextday'||!p.days)throw new Error('形式');const ok=await confirmBox('バックアップ読込','現在の保存データにバックアップ内容を追加・上書きします。よろしいですか？','読み込む');if(!ok)return;Object.entries(p.days).forEach(([d,v])=>safeSet(dayKey(d),JSON.stringify(v)));safeSet(metaKey(),JSON.stringify(p.meta||{dates:Object.keys(p.days)}));loadDay(currentDate);toast('バックアップを読み込みました')}catch(e){toast('バックアップファイルを読み込めませんでした')}
 }
 
+
+// Table-only zoom: display state is not written into the roster or backups.
+let rosterZoom=1, fitZoom=false;
+const gridWrap=$('gridWrap'), gridTable=$('grid');
+function gridBaseWidth(){return Math.max(900,38+state.cols*108,gridWrap.clientWidth)}
+function applyRosterZoom(){
+ if(!state)return;
+ const base=gridBaseWidth();
+ if(fitZoom)rosterZoom=Math.max(0.1,Math.min(1,gridWrap.clientWidth/base));
+ gridTable.style.width=base+'px';gridTable.style.minWidth=base+'px';gridTable.style.zoom=String(rosterZoom);
+ $('zoomLevel').textContent=Math.round(rosterZoom*100)+'%';
+ $('zoomOutBtn').disabled=rosterZoom<=0.1+1e-6;$('zoomInBtn').disabled=rosterZoom>=2;
+}
+function changeRosterZoom(delta){fitZoom=false;rosterZoom=Math.min(2,Math.max(.1,Math.round((rosterZoom+delta)*100)/100));applyRosterZoom()}
+$('zoomOutBtn').addEventListener('click',()=>changeRosterZoom(-.1));
+$('zoomInBtn').addEventListener('click',()=>changeRosterZoom(.1));
+$('zoomFitBtn').addEventListener('click',()=>{fitZoom=true;applyRosterZoom();gridWrap.scrollLeft=0});
+$('zoomResetBtn').addEventListener('click',()=>{fitZoom=false;rosterZoom=1;applyRosterZoom()});
+window.addEventListener('resize',applyRosterZoom);
+
+// A4 landscape JPEG, independent of screen zoom, without DOM screenshots or external libraries.
+// Uses the exact saved cell locations and contents; all text is wrapped rather than truncated.
+const JPEG_W=1400,JPEG_H=Math.round(JPEG_W*210/297),JPEG_TARGET=52*1024;
+let previewFile=null,previewUrl=null;
+const jpegFont='"Meiryo","Yu Gothic UI","Hiragino Sans","Noto Sans CJK JP",sans-serif';
+function splitJpegLines(ctx,value,width){
+ const lines=[];
+ for(const para of String(value??'').replace(/\r\n?/g,'\n').split('\n')){
+  if(!para){lines.push('');continue}
+  let line='';for(const char of para){if(line&&ctx.measureText(line+char).width>width){lines.push(line);line=char}else line+=char}lines.push(line);
+ }
+ return lines;
+}
+function jpegLayout(){
+ const ctx=document.createElement('canvas').getContext('2d');
+ const margin=24,bodyW=JPEG_W-2*margin,numW=39,cols=state.cols,colW=(bodyW-numW)/cols;
+ const maxRow=Math.max(state.rowCount,...state.sites.map(siteEndRow),...state.standalone.map(t=>t.row),0);
+ const map=occupiedMap();
+ const rows=[];const f=18,lh=22;
+ const font=(size,weight)=>`${weight} ${size}px ${jpegFont}`;
+ for(let row=0;row<=maxRow;row++){
+  const cells=[];let h=35;
+  for(let col=0;col<cols;col++){
+   const item=map.get(row+','+col);let text='',kind='blank',color='#222222',weight=700;
+   if(item?.kind==='site'){const site=siteById(item.siteId);text=site.name;kind='site';color='#c90000';weight=800}
+   else if(item?.kind==='entry'){const entry=siteById(item.siteId).entries.find(x=>x.id===item.entryId);text=entry.label;kind=entry.type||'text';color=kind==='vehicle'?'#087653':kind==='text'?'#374151':'#222222';weight=kind==='text'?500:700}
+   else if(item?.kind==='standalone'){text=state.standalone.find(x=>x.id===item.textId).text;kind='text';color='#374151';weight=500}
+   ctx.font=font(f,weight);const lines=text?splitJpegLines(ctx,text,colW-10):[];
+   h=Math.max(h,lines.length*lh+7);cells.push({lines,kind,color,weight});
+  }
+  rows.push({row,h,cells});
+ }
+ ctx.font=font(f,700);
+ const holiday=splitJpegLines(ctx,state.holiday.map(x=>x.label).join('　／　'),bodyW-105);
+ const holidayH=Math.max(36,holiday.length*lh+12);
+ ctx.font=font(f,500);const memo=state.dailyMemo&&state.dailyMemo.trim()?splitJpegLines(ctx,state.dailyMemo,bodyW-12):[];
+ const memoH=memo.length?28+memo.length*lh+10:0;
+ const gridH=rows.reduce((a,r)=>a+r.h,0),total=47+gridH+10+holidayH+(memoH?10+memoH:0);
+ const yScale=Math.min(1,(JPEG_H-2*margin)/total);
+ // Keep the grid geometry and text proportions identical in every exported image.
+ return{margin,bodyW,numW,colW,cols,rows,gridH,holiday,holidayH,memo,memoH,total,yScale,f,lh,font};
+}
+function drawJpeg(layout,width){
+ const cv=document.createElement('canvas');cv.width=width;cv.height=Math.round(width*210/297);
+ const ctx=cv.getContext('2d',{alpha:false}),ratio=width/JPEG_W;
+ ctx.fillStyle='#ffffff';ctx.fillRect(0,0,cv.width,cv.height);
+ ctx.scale(ratio,ratio);
+ const {margin,bodyW,numW,colW,cols,rows,gridH,holiday,holidayH,memo,memoH,yScale,f,lh,font}=layout;
+ ctx.translate(JPEG_W/2,margin);ctx.scale(yScale,yScale);ctx.translate(-JPEG_W/2,0);
+ const x=margin;let y=0;
+ const put=(txt,px,py,size,weight,color,align='left')=>{ctx.font=font(size,weight);ctx.textBaseline='middle';ctx.textAlign=align;ctx.fillStyle=color;ctx.fillText(txt,px,py)};
+ const linesAt=(lines,px,py,h,weight,color,align='center')=>{lines.forEach((txt,i)=>put(txt,px,py+h/2+(i-(lines.length-1)/2)*lh,f,weight,color,align))};
+ const border=(px,py,w,h)=>{ctx.strokeStyle='#747474';ctx.lineWidth=1.05;ctx.strokeRect(px,py,w,h)};
+ put(currentDate.replace(/-/g,'/')+'　翌日配置表',x+2,y+18,25,800,'#222222');y+=47;
+ const top=y;
+ for(const row of rows){
+  ctx.fillStyle='#f5f5f5';ctx.fillRect(x,y,numW,row.h);
+  if(row.row!==0)put(String(row.row),x+numW/2,y+row.h/2,15,500,'#4b5563','center');
+  row.cells.forEach((cell,col)=>{const cx=x+numW+col*colW;if(cell.kind==='site'){ctx.fillStyle='#fff200';ctx.fillRect(cx,y,colW,row.h)}linesAt(cell.lines,cx+colW/2,y,row.h,cell.weight,cell.color)});
+  y+=row.h;
+ }
+ // Single grid strokes, rather than doubled adjacent cell borders.
+ ctx.beginPath();ctx.strokeStyle='#747474';ctx.lineWidth=1.05;let gy=top;ctx.moveTo(x,gy);ctx.lineTo(x+bodyW,gy);
+ for(const row of rows){gy+=row.h;ctx.moveTo(x,gy);ctx.lineTo(x+bodyW,gy)}
+ for(const gx of [x,...Array.from({length:cols+1},(_,i)=>x+numW+i*colW)]){ctx.moveTo(gx,top);ctx.lineTo(gx,y)}ctx.stroke();
+ y+=10;ctx.fillStyle='#fff200';ctx.fillRect(x,y,90,holidayH);border(x,y,bodyW,holidayH);ctx.beginPath();ctx.moveTo(x+90,y);ctx.lineTo(x+90,y+holidayH);ctx.stroke();put('休み',x+45,y+holidayH/2,18,800,'#c90000','center');linesAt(holiday,x+100,y,holidayH,700,'#222222','left');y+=holidayH;
+ if(memo.length){y+=10;put('当日メモ',x+2,y+13,18,800,'#222222');memo.forEach((line,i)=>put(line,x+6,y+36+i*lh,f,500,'#222222'))}
+ return cv;
+}
+function jpegBytes(dataUrl){const bin=atob(dataUrl.slice(dataUrl.indexOf(',')+1));const bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);return bytes}
+function createRosterJpeg(){
+ const layout=jpegLayout();
+ // Preserve approximately 14px body text in ordinary exports. Dense sheets use more pixels.
+ const minWidth=Math.min(3000,Math.max(1080,Math.ceil(13.5*JPEG_W/(layout.f*layout.yScale)/40)*40));
+ const widths=[Math.max(minWidth,1200),Math.max(minWidth,1120),minWidth].filter((w,i,a)=>a.indexOf(w)===i);
+ let best=null;
+ for(const width of widths){const canvas=drawJpeg(layout,width);
+  for(const quality of [.66,.52,.44,.36,.34]){
+   const data=canvas.toDataURL('image/jpeg',quality);const bytes=jpegBytes(data);
+   const candidate={bytes,width,height:canvas.height,quality};
+   if(!best||bytes.length<best.bytes.length)best=candidate;
+   if(bytes.length<=JPEG_TARGET){best=candidate;break}
+  }
+  if(best.bytes.length<=JPEG_TARGET)break;
+ }
+ // Never reduce below the readability floor merely to force a particular byte count.
+ const filename='翌日配置表_'+currentDate+'.jpg';
+ const file=new File([best.bytes],filename,{type:'image/jpeg'});
+ return{file,width:best.width,height:best.height,quality:best.quality};
+}
+function showJpegPreview(result){
+ if(previewUrl)URL.revokeObjectURL(previewUrl);
+ previewFile=result.file;previewUrl=URL.createObjectURL(previewFile);$('jpegPreview').src=previewUrl;
+ $('jpegInfo').textContent='A4横比率　'+result.width+' × '+result.height+' px ／ '+(previewFile.size/1024).toFixed(1)+' KB';
+ $('jpegShareHelp').textContent='LINE共有はスマホの共有画面でLINE → トークルームを選択してください。共有できない端末ではJPEGを保存して、LINEから画像を添付してください。';
+ $('sharePreviewBtn').disabled=!canShareJpeg(previewFile);
+ if(!$('jpegDlg').open)$('jpegDlg').showModal();
+}
+function canShareJpeg(file){try{return typeof navigator.share==='function'&&typeof navigator.canShare==='function'&&navigator.canShare({files:[file]})}catch(e){return false}}
+function downloadJpeg(file){const url=URL.createObjectURL(file);const a=document.createElement('a');a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);toast('JPEGを保存しました')}
+function shareJpeg(result){
+ const file=result.file;
+ if(!canShareJpeg(file)){showJpegPreview(result);$('jpegShareHelp').textContent='この端末ではアプリから画像の直接共有ができません。「JPEGを保存」してLINEのトークから画像を添付してください。';return}
+ // Keep the actual navigator.share call in the original tap event, not after a timer/await.
+ try{navigator.share({files:[file]}).catch(err=>{if(err?.name==='AbortError')return;showJpegPreview(result);$('jpegShareHelp').textContent='共有画面を開けませんでした。「JPEGを保存」してLINEから画像を添付してください。'})}
+ catch(err){showJpegPreview(result);$('jpegShareHelp').textContent='共有画面を開けませんでした。JPEGを保存してLINEから画像を添付してください。'}
+}
+function exportRosterJpeg(mode){try{saveNow();const result=createRosterJpeg();if(mode==='share')shareJpeg(result);else showJpegPreview(result)}catch(err){console.error(err);toast('JPEGを作成できませんでした。もう一度お試しください。')}}
+$('jpegBtn').addEventListener('click',()=>exportRosterJpeg('preview'));
+$('lineShareBtn').addEventListener('click',()=>exportRosterJpeg('share'));
+$('savePreviewBtn').addEventListener('click',()=>{if(previewFile)downloadJpeg(previewFile)});
+$('sharePreviewBtn').addEventListener('click',()=>{if(previewFile)shareJpeg({file:previewFile,width:$('jpegPreview').naturalWidth,height:$('jpegPreview').naturalHeight})});
+$('jpegDlg').addEventListener('close',()=>{if(previewUrl)URL.revokeObjectURL(previewUrl);previewUrl=null;previewFile=null;$('jpegPreview').removeAttribute('src')});
+
 // listeners
 els.date.addEventListener('change',()=>loadDay(els.date.value));
-$('copyPrevBtn').addEventListener('click',copyPrevious);els.undoBtn.addEventListener('click',undo);$('printBtn').addEventListener('click',()=>{saveNow();window.print()});$('settingsBtn').addEventListener('click',()=>{renderSettings();els.settingsDlg.showModal()});
+$('copyPrevBtn').addEventListener('click',copyPrevious);els.undoBtn.addEventListener('click',undo);$('settingsBtn').addEventListener('click',()=>{renderSettings();els.settingsDlg.showModal()});
 $('cancelSelectBtn').addEventListener('click',cancelSelection);$('editSelectedBtn').addEventListener('click',openEditSelected);els.holidayTarget.addEventListener('click',()=>{if(selected)moveSelectedToHoliday();else toast('先に休みにする人を押してください')});
 els.dailyMemo.addEventListener('input',()=>{state.dailyMemo=els.dailyMemo.value;scheduleSave()});$('dailyMic').addEventListener('click',()=>startSpeech(els.dailyMemo,$('dailyMicStatus'),$('dailyMic')));
 
@@ -523,7 +690,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&(selected||movingSi
 const today=isoLocal(new Date());const meta=readMeta();els.date.value=meta.lastDate||today;loadDay(els.date.value);
 })();
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
-  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(()=>{}));
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{}));
 }
 </script>
 </body>
