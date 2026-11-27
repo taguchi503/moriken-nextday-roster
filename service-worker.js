@@ -1,6 +1,6 @@
-const CACHE='moriken-nextday-v0.2.0';
+const CACHE='moriken-nextday-v0.5.0-r1';
 const ICONS=['./icons/icon-192.png','./icons/icon-512.png','./icons/icon-maskable-512.png'];
-const ASSETS=['./','./index.html','./manifest.webmanifest',...ICONS,...ICONS.map(p=>p+'?v=0.2.0')];
+const ASSETS=['./','./index.html','./manifest.webmanifest',...ICONS,...ICONS.map(p=>p+'?v=0.3.0')];
 const URLs=new Set(ASSETS.map(path=>new URL(path,self.registration.scope).href));
 const imagePaths=new Set(ICONS.map(path=>new URL(path,self.registration.scope).origin+new URL(path,self.registration.scope).pathname));
 self.addEventListener('install',e=>e.waitUntil((async()=>{const c=await caches.open(CACHE);await c.addAll(ASSETS.map(p=>new Request(new URL(p,self.registration.scope),{cache:'reload'})));await self.skipWaiting()})()));
