@@ -1,4 +1,4 @@
-const CACHE='moriken-nextday-v0.5.1-r1';
+const CACHE='moriken-nextday-v0.5.2-r1';
 const ICONS=['./icons/icon-192.png','./icons/icon-512.png','./icons/icon-maskable-512.png'];
 const ASSETS=['./','./index.html','./manifest.webmanifest',...ICONS,...ICONS.map(p=>p+'?v=0.3.0')];
 const URLs=new Set(ASSETS.map(path=>new URL(path,self.registration.scope).href));
